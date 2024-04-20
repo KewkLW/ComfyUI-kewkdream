@@ -39,15 +39,18 @@ class MoondreamQuery:
     RETURN_TYPES = ("STRING",)  
     RETURN_NAMES =("text",)  
     FUNCTION = "process"  
+
     CATEGORY = "Moondream"  
 
     def process(self, images, question, keep_model_loaded, model, max_new_tokens=256, iteration=1):
         
         batch_size = images.shape[0]  
         device = comfy.model_management.get_torch_device()  
-        dtype = torch.float16 if comfy.model_management.should_use_fp16() and not comfy.model_management.is_device_mps(device) else torch.float32         
+        dtype = torch.float16 if comfy.model_management.should_use_fp16() and not comfy.model_management.is_device_mps(device) else torch.float32  
+        
         checkpoint_path = os.path.join(script_directory, f"checkpoints/{model}")  
-       
+
+        
         if not hasattr(self, "moondream") or self.moondream is None or self.selected_model != model:
             self.selected_model = model
             model_safetensors_path = os.path.join(checkpoint_path, "model.safetensors")
@@ -63,6 +66,8 @@ class MoondreamQuery:
             self.tokenizer = AutoTokenizer.from_pretrained(checkpoint_path)  
             self.moondream = Moondream.from_pretrained(checkpoint_path).to(device=device, dtype=dtype)  
             self.moondream.eval()  
+
+        
 
         answer_dict = {}  
         if batch_size > 1:  
@@ -159,11 +164,14 @@ class MoondreamQueryCaptions:
             comfy.model_management.soft_empty_cache()
         return answer_list,       
 
+        
+
+
 NODE_CLASS_MAPPINGS = {
     "MoondreamQuery": MoondreamQuery,
     "MoondreamQueryCaptions": MoondreamQueryCaptions,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "MoondreamQuery": "Moondream Query+", # 笑,
-    "MoondreamQueryCaptions": "Moondream QueryCaptions",
+    "MoondreamQuery": "MoondreamQuery",
+    "MoondreamQueryCaptions": "MoondreamQueryCaptions",
 }
